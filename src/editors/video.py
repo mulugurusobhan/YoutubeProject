@@ -33,7 +33,7 @@ class VideoEditor:
         self,
         audio_path: Path,
         image_paths: list[Path],
-        subtitles: SubtitleResult,
+        subtitles: SubtitleResult | None,
         run_id: str,
     ) -> VideoResult:
         output_path = get_run_dir(self.config, run_id) / "short.mp4"
@@ -43,9 +43,11 @@ class VideoEditor:
 
         # Layers
         base = self._build_scene_track(image_paths, duration)
-        captions = self._build_caption_track(subtitles.words)
+        layers = [base]
+        if subtitles and subtitles.words:
+            layers += self._build_caption_track(subtitles.words)
         final_video = CompositeVideoClip(
-            [base] + captions,
+            layers,
             size=(self.width, self.height),
         )
 

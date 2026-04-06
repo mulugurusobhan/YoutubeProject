@@ -104,6 +104,7 @@ class Pipeline:
         """
         run_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
         topic_summary = ", ".join(brief["keywords"])
+        enable_subtitles = brief.get("enable_subtitles", True)
 
         print(f"\n{'=' * 60}")
         print(f"  YouTube Shorts Pipeline — Run {run_id}")
@@ -127,8 +128,12 @@ class Pipeline:
         print()
 
         # 4. Subtitles
-        print("[4/7] Generating subtitles...")
-        subtitles = self.subtitle_gen.generate(voice.audio_path, run_id, script.text)
+        if enable_subtitles:
+            print("[4/7] Generating subtitles...")
+            subtitles = self.subtitle_gen.generate(voice.audio_path, run_id, script.text)
+        else:
+            print("[4/7] Skipping subtitles")
+            subtitles = None
         print()
 
         # 5. Video assembly

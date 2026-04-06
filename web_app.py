@@ -27,12 +27,13 @@ def generate():
     keywords_raw = data.get("keywords", "").strip()
     description = data.get("description", "").strip()
     notify_email = data.get("notify_email", "").strip() or None
+    enable_subtitles = data.get("enable_subtitles", True)
 
     if not keywords_raw or not description:
         return jsonify({"error": "Keywords and description are required."}), 400
 
     keywords = [k.strip() for k in keywords_raw.split(",") if k.strip()]
-    brief = {"keywords": keywords, "description": description, "notify_email": notify_email}
+    brief = {"keywords": keywords, "description": description, "notify_email": notify_email, "enable_subtitles": enable_subtitles}
 
     # Start pipeline in background thread
     thread = threading.Thread(target=_run_pipeline, args=(brief,), daemon=True)
@@ -55,6 +56,7 @@ def _run_pipeline(brief: dict):
     pipeline = Pipeline(config)
     keywords = brief["keywords"]
     description = brief["description"]
+    enable_subtitles = brief.get("enable_subtitles", True)
 
     # Generate a run_id early for tracking
     import uuid
@@ -115,10 +117,15 @@ def _run_pipeline(brief: dict):
         _update_job(job, "3. Visuals done", completed_steps[:])
 
         # 4. Subtitles
-        _update_job(job, "4. Generating subtitles...")
-        subtitles = pipeline.subtitle_gen.generate(voice.audio_path, run_id, script.text)
-        completed_steps.append(step_names[3])
-        _update_job(job, "4. Subtitles done", completed_steps[:])
+        if enable_subtitles:
+            _update_job(job, "4. Generating subtitles...")
+            subtitles = pipeline.subtitle_gen.generate(voice.audio_path, run_id, script.text)
+            completed_steps.append(step_names[3])
+            _update_job(job, "4. Subtitles done", completed_steps[:])
+        else:
+            subtitles = None
+            completed_steps.append(step_names[3])
+            _update_job(job, "4. Subtitles skipped", completed_steps[:])
 
         # 5. Video
         _update_job(job, "5. Assembling video...")

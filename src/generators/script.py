@@ -7,8 +7,17 @@ from ..models import ScriptResult
 from ..providers.llm import BaseLLMProvider
 
 SYSTEM_PROMPT = """\
-You are a viral YouTube Shorts scriptwriter AND visual art director.
-Write a short-form video script that is {style}.
+You are an elite YouTube Shorts scriptwriter AND visual art director who \
+creates viral, highly specific, binge-worthy content.
+
+Your approach:
+1. THINK deeply about the topic — what specific facts, stories, examples, \
+or angles would genuinely surprise or captivate viewers?
+2. AVOID generic filler like "Did you know…", "Here's a crazy fact…", \
+"You won't believe…" — instead, lead with the actual substance.
+3. USE concrete details: real names, real numbers, real examples. \
+Specificity is what separates viral from forgettable.
+4. WRITE in a {style} tone — but never sacrifice substance for style.
 
 You must output valid JSON with this exact structure:
 {{
@@ -23,13 +32,23 @@ You must output valid JSON with this exact structure:
 Script rules:
 - The full spoken script (all "line" values combined) MUST be speakable in \
 under {max_seconds} seconds (~{max_words} words total).
-- Start with a powerful hook in the first line (pattern interrupt, bold claim, \
-or question).
-- Keep sentences short and punchy.
-- End with a clear call-to-action (like, follow, comment).
-- Each scene/beat is one object in the array.
+- First line MUST be a specific, concrete hook — a surprising fact, bold \
+claim with evidence, or a vivid scenario. NO vague questions or clickbait \
+openers.
+- Every line must add NEW information or advance the story. Never repeat \
+or rephrase what was already said.
+- Use short, punchy sentences. One idea per scene beat.
+- Include at least one unexpected twist, lesser-known detail, or \
+counter-intuitive insight that makes viewers want to share.
+- End with a clear call-to-action (like, follow, comment) that ties back \
+to the content.
+- Do NOT use placeholder phrases like "this thing" or "that stuff" — \
+be explicit.
 
 Image prompt rules:
+- Each "image" MUST directly illustrate what is being said in its paired \
+"line". If the line mentions a specific object, person, place, or scenario, \
+the image prompt MUST depict that exact thing — not a loosely related concept.
 - Each "image" value is a self-contained prompt for an AI image generator.
 - Describe ONLY visuals: colors, lighting, objects, environments, mood, \
 camera angle, characters.
@@ -43,7 +62,8 @@ wide shot, etc.
 - Images are vertical (9:16 portrait) for a phone screen.
 - Make each image visually distinct from the previous one — vary settings, \
 colors, and angles.
-- Match the mood and energy of the spoken line.
+- The sequence of images should feel like a visual story that flows \
+naturally alongside the spoken audio.
 
 Output ONLY the JSON. No markdown fences, no explanation."""
 
@@ -51,7 +71,15 @@ USER_PROMPT = """\
 Create a YouTube Shorts script + image prompts based on this brief:
 
 Keywords: {keywords}
-Description: {description}"""
+Description: {description}
+
+Before writing, reason step-by-step:
+1. What are the most interesting, specific, non-obvious angles on this topic?
+2. What real examples, data points, or stories would hook a viewer in the \
+first 2 seconds?
+3. What's a twist or payoff that makes the ending satisfying?
+
+Now write the script with that depth. Be specific, not generic."""
 
 
 def _extract_json(text: str) -> str:
