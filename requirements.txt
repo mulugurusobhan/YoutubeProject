@@ -1,0 +1,13 @@
+openai>=1.30.0
+elevenlabs>=1.0.0
+google-api-python-client>=2.130.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+moviepy>=2.0.0
+pydub>=0.25.1
+Pillow>=10.3.0
+python-dotenv>=1.0.1
+pyyaml>=6.0.1
+requests>=2.31.0
+openai-whisper>=20240930
+flask>=3.0.0

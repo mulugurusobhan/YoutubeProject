@@ -1,0 +1,61 @@
+# Pipeline Configuration
+
+# Content settings
+content:
+  niche: "tech tips"
+  language: "en"
+  max_duration_seconds: 58  # keep under 60s limit
+
+# Script generation
+script:
+  provider: "azure"           # "azure" or "openai"
+  model: "gpt-5.2-chat"
+  temperature: 0.9
+  style: "energetic, casual, Gen-Z friendly"
+  include_cta: true
+
+# Voice generation
+voice:
+  provider: "azure-tts"       # "azure-tts", "openai", or "elevenlabs"
+  openai_voice: "nova"        # alloy, echo, fable, onyx, nova, shimmer
+  openai_model: "tts-1-hd"
+  elevenlabs_voice_id: ""     # fill if using elevenlabs
+
+# Visual generation
+visuals:
+  provider: "azure-flux"      # "azure-flux" or "dall-e"
+  image_model: "FLUX.2-pro"
+  style: "digital illustration, vibrant colors"
+  size: "1024x1792"           # vertical for Shorts
+
+# Subtitles
+subtitles:
+  whisper_model: "base"       # tiny, base, small, medium, large
+  font: "assets/fonts/Montserrat-Bold.ttf"
+  font_size: 60
+  color: "white"
+  highlight_color: "yellow"
+  stroke_color: "black"
+  stroke_width: 3
+  position: "center"          # center, bottom
+
+# Video assembly
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  background_music_volume: 0.08
+  background_music_dir: "assets/music"
+
+# YouTube upload
+youtube:
+  category_id: "22"           # People & Blogs (see YouTube API docs)
+  privacy_status: "public"    # private, unlisted, public
+  default_tags:
+    - "shorts"
+    - "ai generated"
+  notify_subscribers: false
+
+# Output
+output:
+  dir: "output"

@@ -1,0 +1,14 @@
+# Secrets & credentials
+.env
+*.pem
+client_secret_*.json
+config/client_secret.json
+config/youtube_token.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Output
+output/

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Shorts Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f0f0f;
+            color: #e8e8e8;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #ff0000, #ff4444, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        header p {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        /* Form Card */
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+            color: #fff;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ff4444;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-group .hint {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 32px;
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn:hover { background: #cc0000; }
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #0d9488; color: #fff; }
+        .toast.error { background: #dc2626; color: #fff; }
+
+        /* Jobs Section */
+        .jobs-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .jobs-header h2 { font-size: 1.2rem; color: #fff; }
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .badge.running { background: #1e3a5f; color: #60a5fa; }
+        .badge.completed { background: #14532d; color: #4ade80; }
+        .badge.failed { background: #450a0a; color: #f87171; }
+
+        .job-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .job-card.running { border-left: 3px solid #60a5fa; }
+        .job-card.completed { border-left: 3px solid #4ade80; }
+        .job-card.failed { border-left: 3px solid #f87171; }
+
+        .job-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .job-top .run-id {
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .job-keywords {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+        .job-step {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        .job-step .current {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+        .job-step .done {
+            color: #4ade80;
+        }
+
+        /* Progress Steps */
+        .steps {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .step-pill {
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: #222;
+            color: #666;
+        }
+        .step-pill.done { background: #14532d; color: #4ade80; }
+        .step-pill.active { background: #1e3a5f; color: #60a5fa; animation: pulse 1.5s infinite; }
+        .step-pill.failed { background: #450a0a; color: #f87171; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .video-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 6px 14px;
+            background: #1e3a5f;
+            color: #60a5fa;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .video-link:hover { background: #264a73; }
+
+        .elapsed {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .no-jobs {
+            text-align: center;
+            color: #555;
+            padding: 40px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>▶ YouTube Shorts Generator</h1>
+            <p>Enter keywords and a description to auto-generate and upload a YouTube Short</p>
+        </header>
+
+        <!-- Generate Form -->
+        <div class="card">
+            <h2>Create New Short</h2>
+            <form id="generateForm">
+                <div class="form-group">
+                    <label>Keywords</label>
+                    <input type="text" id="keywords" placeholder="e.g. python, tricks, coding"
+                           required autocomplete="off">
+                    <div class="hint">Comma-separated topic keywords</div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="description"
+                              placeholder="Describe what the video should be about, the style, mood, and visuals you want..."
+                              required></textarea>
+                    <div class="hint">A few sentences about the content, pacing, and visual style</div>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Generate &amp; Upload
+                </button>
+            </form>
+        </div>
+
+        <!-- Jobs List -->
+        <div class="jobs-header">
+            <h2>Pipeline Runs</h2>
+        </div>
+        <div id="jobsList">
+            <div class="no-jobs">No pipeline runs yet. Submit a topic above to get started.</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const ALL_STEPS = [
+            "Script", "Voiceover", "Visuals", "Subtitles", "Video", "Metadata", "Upload"
+        ];
+
+        document.getElementById("generateForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("submitBtn");
+            const keywords = document.getElementById("keywords").value.trim();
+            const description = document.getElementById("description").value.trim();
+
+            if (!keywords || !description) return;
+
+            btn.disabled = true;
+            btn.textContent = "Starting pipeline...";
+
+            try {
+                const res = await fetch("/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ keywords, description }),
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast("Pipeline started! Check progress below.", "success");
+                    document.getElementById("keywords").value = "";
+                    document.getElementById("description").value = "";
+                } else {
+                    showToast(data.error || "Failed to start pipeline.", "error");
+                }
+            } catch (err) {
+                showToast("Network error. Is the server running?", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Generate & Upload`;
+            }
+        });
+
+        function showToast(msg, type) {
+            const toast = document.getElementById("toast");
+            toast.textContent = msg;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove("show"), 4000);
+        }
+
+        function renderJobs(jobList) {
+            const container = document.getElementById("jobsList");
+            if (!jobList || jobList.length === 0) {
+                container.innerHTML = `<div class="no-jobs">No pipeline runs yet. Submit a topic above to get started.</div>`;
+                return;
+            }
+
+            container.innerHTML = jobList.map(job => {
+                const completedCount = (job.completed_steps || []).length;
+                const statusClass = job.status;
+
+                let stepsHtml = ALL_STEPS.map((name, idx) => {
+                    if (idx < completedCount) return `<span class="step-pill done">✓ ${name}</span>`;
+                    if (idx === completedCount && job.status === "running") return `<span class="step-pill active">⏳ ${name}</span>`;
+                    if (idx === completedCount && job.status === "failed") return `<span class="step-pill failed">✗ ${name}</span>`;
+                    return `<span class="step-pill">${name}</span>`;
+                }).join("");
+
+                let extra = "";
+                if (job.video_url) {
+                    extra += `<a class="video-link" href="${job.video_url}" target="_blank">🔗 Watch on YouTube</a>`;
+                }
+                if (job.title && job.status === "completed") {
+                    extra += `<div style="margin-top:8px;font-size:0.85rem;color:#aaa;">Title: <strong style="color:#ccc">${job.title}</strong></div>`;
+                }
+                if (job.error) {
+                    extra += `<div style="margin-top:8px;font-size:0.82rem;color:#f87171;background:#1a0a0a;padding:8px;border-radius:6px;">${job.error}</div>`;
+                }
+
+                const elapsed = job.elapsed ? `${Math.round(job.elapsed)}s` : (job.started ? `${Math.round((Date.now()/1000) - job.started)}s` : "");
+
+                return `
+                    <div class="job-card ${statusClass}">
+                        <div class="job-top">
+                            <span class="run-id">${job.run_id}</span>
+                            <span class="badge ${statusClass}">${job.status.toUpperCase()}</span>
+                        </div>
+                        <div class="job-keywords">🏷️ ${(job.keywords || []).join(", ")}</div>
+                        <div class="steps">${stepsHtml}</div>
+                        ${extra}
+                        ${elapsed ? `<div class="elapsed">⏱ ${elapsed}</div>` : ""}
+                    </div>
+                `;
+            }).join("");
+        }
+
+        // Poll status every 3 seconds
+        async function pollStatus() {
+            try {
+                const res = await fetch("/status");
+                const data = await res.json();
+                renderJobs(data);
+            } catch (e) { /* ignore */ }
+        }
+
+        setInterval(pollStatus, 3000);
+        pollStatus();
+    </script>
+</body>
+</html>
