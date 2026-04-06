@@ -9,12 +9,13 @@ from datetime import datetime
 
 class EmailNotifier:
 
-    def __init__(self):
+    def __init__(self, cc: str | None = None):
         self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
         self.sender = os.getenv("SMTP_USER")
         self.password = os.getenv("SMTP_PASSWORD")
         self.recipient = os.getenv("NOTIFICATION_EMAIL", "domcobb1409200@gmail.com")
+        self.cc = cc
 
     def _send(self, subject: str, html_body: str) -> None:
         if not self.sender or not self.password:
@@ -24,15 +25,21 @@ class EmailNotifier:
         msg = MIMEMultipart("alternative")
         msg["From"] = self.sender
         msg["To"] = self.recipient
+        if self.cc:
+            msg["Cc"] = self.cc
         msg["Subject"] = subject
         msg.attach(MIMEText(html_body, "html"))
+
+        recipients = [self.recipient]
+        if self.cc:
+            recipients.append(self.cc)
 
         with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
             server.starttls()
             server.login(self.sender, self.password)
-            server.sendmail(self.sender, self.recipient, msg.as_string())
+            server.sendmail(self.sender, recipients, msg.as_string())
 
-        print(f"[Email] Sent: {subject}")
+        print(f"[Email] Sent: {subject}" + (f" (CC: {self.cc})" if self.cc else ""))
 
     def send_start(self, keywords: list[str], description: str, run_id: str) -> None:
         subject = "YouTube Upload Started"

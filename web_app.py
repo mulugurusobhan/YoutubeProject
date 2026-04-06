@@ -26,12 +26,13 @@ def generate():
     data = request.get_json()
     keywords_raw = data.get("keywords", "").strip()
     description = data.get("description", "").strip()
+    notify_email = data.get("notify_email", "").strip() or None
 
     if not keywords_raw or not description:
         return jsonify({"error": "Keywords and description are required."}), 400
 
     keywords = [k.strip() for k in keywords_raw.split(",") if k.strip()]
-    brief = {"keywords": keywords, "description": description}
+    brief = {"keywords": keywords, "description": description, "notify_email": notify_email}
 
     # Start pipeline in background thread
     thread = threading.Thread(target=_run_pipeline, args=(brief,), daemon=True)
@@ -48,7 +49,8 @@ def status():
 
 
 def _run_pipeline(brief: dict):
-    notifier = EmailNotifier()
+    notify_email = brief.get("notify_email")
+    notifier = EmailNotifier(cc=notify_email)
     config = load_config()
     pipeline = Pipeline(config)
     keywords = brief["keywords"]

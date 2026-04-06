@@ -105,7 +105,9 @@ class YouTubeUploader:
                     str(PROJECT_ROOT / "config" / "client_secret.json"),
                 )
                 flow = InstalledAppFlow.from_client_secrets_file(secrets_file, SCOPES)
-                creds = flow.run_local_server(port=8080)
+                creds = flow.run_local_server(
+                    port=8080, open_browser=False, bind_addr="0.0.0.0",
+                )
 
             TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
             with open(TOKEN_PATH, "w") as f:
