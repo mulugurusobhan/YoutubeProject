@@ -10,8 +10,11 @@ from datetime import datetime
 def _describe_error_with_llm(error_traceback: str, failed_step: str, job_type: str = "pipeline") -> str:
     """Use LLM to turn a raw traceback into a user-friendly explanation."""
     try:
+        from src.config import load_config
         from src.providers.llm import AzureLLMProvider
-        llm = AzureLLMProvider(temperature=0.3)
+        config = load_config()
+        model = config.get("script", {}).get("model", "gpt-4o")
+        llm = AzureLLMProvider(model=model, temperature=0.3)
         system = (
             "You are an assistant that explains technical errors to non-technical users. "
             "Given a Python traceback from a video generation pipeline, write a short, "
