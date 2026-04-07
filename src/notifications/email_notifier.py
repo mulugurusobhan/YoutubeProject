@@ -7,6 +7,27 @@ from email.mime.text import MIMEText
 from datetime import datetime
 
 
+def _describe_error_with_llm(error_traceback: str, failed_step: str, job_type: str = "pipeline") -> str:
+    """Use LLM to turn a raw traceback into a user-friendly explanation."""
+    try:
+        from src.providers.llm import AzureLLMProvider
+        llm = AzureLLMProvider(temperature=0.3)
+        system = (
+            "You are an assistant that explains technical errors to non-technical users. "
+            "Given a Python traceback from a video generation pipeline, write a short, "
+            "clear explanation (2-4 sentences) of what went wrong and a suggestion to fix it. "
+            "Do NOT include code, file paths, or class names. Speak in plain English."
+        )
+        user = (
+            f"Job type: {job_type}\n"
+            f"Failed at step: {failed_step}\n"
+            f"Error:\n{error_traceback[:1500]}"
+        )
+        return llm.complete(system, user)
+    except Exception:
+        return ""
+
+
 class EmailNotifier:
 
     def __init__(self, cc: str | None = None):
@@ -146,12 +167,22 @@ class EmailNotifier:
 
     def send_failure(self, run_id: str, keywords: list[str], description: str,
                      failed_step: str, error_message: str,
-                     completed_steps: list[str], elapsed_seconds: float) -> None:
+                     completed_steps: list[str], elapsed_seconds: float,
+                     job_type: str = "pipeline") -> None:
         subject = "❌ YouTube Upload Failed"
         steps_html = ""
         for step in completed_steps:
             steps_html += f'<tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px;">✅ {step}</td></tr>'
         steps_html += f'<tr style="border-bottom: 1px solid #eee; background: #fef2f2;"><td style="padding: 8px; color: #dc2626;">❌ {failed_step}</td></tr>'
+
+        # Get a user-friendly explanation from LLM
+        friendly = _describe_error_with_llm(error_message, failed_step, job_type)
+        explanation_html = ""
+        if friendly:
+            explanation_html = f"""
+            <h3 style="color: #dc2626;">What went wrong:</h3>
+            <p style="background: #fef2f2; padding: 12px; border-radius: 6px; color: #991b1b; line-height: 1.6;">{friendly}</p>
+            """
 
         html = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -180,10 +211,14 @@ class EmailNotifier:
                 {steps_html}
             </table>
 
-            <h3 style="color: #dc2626;">Error:</h3>
-            <pre style="background: #fef2f2; padding: 12px; border-radius: 6px; color: #991b1b; overflow-x: auto; font-size: 13px;">{error_message[:500]}</pre>
+            {explanation_html}
 
-            <p style="color: #555;">Description: {description}</p>
+            <details style="margin-top: 12px;">
+                <summary style="cursor: pointer; color: #888; font-size: 13px;">Show technical details</summary>
+                <pre style="background: #f3f4f6; padding: 12px; border-radius: 6px; color: #555; overflow-x: auto; font-size: 12px; margin-top: 8px;">{error_message[:800]}</pre>
+            </details>
+
+            <p style="color: #555; margin-top: 16px;">Description: {description}</p>
         </div>
         """
         self._send(subject, html)

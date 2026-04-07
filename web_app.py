@@ -367,6 +367,7 @@ def _run_repost(reel_url: str, custom_title: str | None, notify_email: str | Non
                 error_message=error_msg,
                 completed_steps=completed_steps,
                 elapsed_seconds=elapsed,
+                job_type="instagram repost",
             )
         except Exception as email_err:
             print(f"[Email] Failed to send failure notification: {email_err}")
