@@ -8,6 +8,7 @@ from flask import Flask, render_template, request, jsonify
 from src.config import load_config
 from src.pipeline import Pipeline
 from src.notifications.email_notifier import EmailNotifier
+from src.downloaders.instagram import download_reel, is_logged_in as ig_is_logged_in
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -47,6 +48,15 @@ def status():
     with jobs_lock:
         job_list = sorted(jobs.values(), key=lambda j: j.get("started", 0), reverse=True)
     return jsonify(job_list)
+
+
+# ------------------------------------------------------------------
+# Instagram Auth
+# ------------------------------------------------------------------
+
+@app.route("/instagram/status")
+def instagram_status():
+    return jsonify({"logged_in": ig_is_logged_in()})
 
 
 def _run_pipeline(brief: dict):
@@ -208,6 +218,158 @@ def _update_job(job: dict, current_step: str, completed_steps: list | None = Non
         job["current_step"] = current_step
         if completed_steps is not None:
             job["completed_steps"] = completed_steps
+
+
+# ------------------------------------------------------------------
+# Instagram Reel → YouTube Repost
+# ------------------------------------------------------------------
+
+@app.route("/repost", methods=["POST"])
+def repost():
+    data = request.get_json()
+    reel_url = data.get("reel_url", "").strip()
+    custom_title = data.get("title", "").strip() or None
+    notify_email = data.get("notify_email", "").strip() or None
+
+    if not reel_url:
+        return jsonify({"error": "Instagram reel URL is required."}), 400
+
+    thread = threading.Thread(
+        target=_run_repost,
+        args=(reel_url, custom_title, notify_email),
+        daemon=True,
+    )
+    thread.start()
+
+    return jsonify({"message": "Repost started!"})
+
+
+def _run_repost(reel_url: str, custom_title: str | None, notify_email: str | None):
+    notifier = EmailNotifier(cc=notify_email)
+    config = load_config()
+
+    from src.uploaders.youtube import YouTubeUploader
+    from src.models import Metadata
+    from src.generators.metadata import MetadataGenerator
+    from src.providers.llm import AzureLLMProvider, OpenAILLMProvider
+
+    step_names = [
+        "1. Download Reel",
+        "2. Generate Metadata",
+        "3. Upload to YouTube",
+    ]
+
+    job = {
+        "run_id": "",
+        "keywords": ["instagram", "repost"],
+        "description": f"Repost: {reel_url}",
+        "status": "running",
+        "current_step": "Starting...",
+        "started": time.time(),
+        "completed_steps": [],
+        "error": None,
+        "video_url": None,
+        "job_type": "repost",
+    }
+
+    completed_steps = []
+    start_time = time.time()
+
+    try:
+        # 1. Download
+        _update_job(job, "1. Downloading reel...")
+        reel = download_reel(reel_url)
+        run_id = reel["run_id"]
+        job["run_id"] = run_id
+        with jobs_lock:
+            jobs[run_id] = job
+        completed_steps.append(step_names[0])
+        _update_job(job, "1. Reel downloaded", completed_steps[:])
+
+        # Send start email now that we have run_id
+        try:
+            notifier.send_repost_start(reel_url, run_id)
+        except Exception as e:
+            print(f"[Email] Failed to send repost start notification: {e}")
+
+        # 2. Generate metadata with LLM
+        _update_job(job, "2. Generating metadata...")
+        if config["script"].get("provider") == "azure":
+            llm = AzureLLMProvider(
+                model=config["script"]["model"],
+                temperature=0.7,
+            )
+        else:
+            llm = OpenAILLMProvider(
+                model=config["script"]["model"],
+                temperature=0.7,
+            )
+        meta_gen = MetadataGenerator(llm, config)
+        reel_description = reel["description"] or reel["title"] or "Instagram Reel"
+        metadata = meta_gen.generate(reel_description, "instagram reel repost")
+
+        if custom_title:
+            metadata.title = custom_title[:100]
+
+        completed_steps.append(step_names[1])
+        _update_job(job, "2. Metadata done", completed_steps[:])
+
+        # 3. Upload to YouTube
+        _update_job(job, "3. Uploading to YouTube...")
+        uploader = YouTubeUploader(config)
+        thumbnail = reel["thumbnail_path"]
+        video_id = uploader.upload(reel["video_path"], metadata, thumbnail)
+        completed_steps.append(step_names[2])
+
+        elapsed = time.time() - start_time
+        video_url = f"https://youtube.com/shorts/{video_id}" if video_id else None
+
+        with jobs_lock:
+            job["status"] = "completed"
+            job["current_step"] = "Done!"
+            job["completed_steps"] = completed_steps
+            job["video_url"] = video_url
+            job["title"] = metadata.title
+            job["elapsed"] = elapsed
+
+        # Send success email
+        try:
+            notifier.send_repost_success(
+                run_id=run_id,
+                reel_url=reel_url,
+                title=metadata.title,
+                video_id=video_id,
+                duration=reel.get("duration", 0),
+                elapsed_seconds=elapsed,
+            )
+        except Exception as e:
+            print(f"[Email] Failed to send repost success notification: {e}")
+
+    except Exception as e:
+        elapsed = time.time() - start_time
+        error_msg = traceback.format_exc()
+        print(f"[Repost] FAILED:\n{error_msg}")
+        failed_step = step_names[len(completed_steps)] if len(completed_steps) < len(step_names) else "Unknown"
+
+        with jobs_lock:
+            job["status"] = "failed"
+            job["current_step"] = f"Failed at: {failed_step}"
+            job["completed_steps"] = completed_steps
+            job["error"] = str(e)
+            job["elapsed"] = elapsed
+
+        try:
+            notifier.send_failure(
+                run_id=job.get("run_id", "unknown"),
+                keywords=["instagram", "repost"],
+                description=reel_url,
+                failed_step=failed_step,
+                error_message=error_msg,
+                completed_steps=completed_steps,
+                elapsed_seconds=elapsed,
+            )
+        except Exception as email_err:
+            print(f"[Email] Failed to send failure notification: {email_err}")
 
 
 if __name__ == "__main__":

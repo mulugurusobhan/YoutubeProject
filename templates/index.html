@@ -33,6 +33,38 @@
             font-size: 0.95rem;
         }
 
+        /* Mode Switcher */
+        .mode-switcher {
+            display: flex;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 16px 24px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .mode-btn:hover { color: #ccc; background: #222; }
+        .mode-btn.active {
+            background: #ff0000;
+            color: #fff;
+        }
+        .mode-panel { display: none; }
+        .mode-panel.active { display: block; }
+
         /* Form Card */
         .card {
             background: #1a1a1a;
@@ -273,53 +305,140 @@
             left: 23px;
             background: #fff;
         }
+
+        /* Instagram Auth */
+        .ig-auth-banner {
+            background: #1c1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .ig-auth-banner.connected {
+            border-color: #14532d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ig-auth-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .ig-auth-banner.connected .ig-auth-status { margin-bottom: 0; }
+        .btn-sm {
+            padding: 8px 18px;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>▶ YouTube Shorts Generator</h1>
-            <p>Enter keywords and a description to auto-generate and upload a YouTube Short</p>
+            <p>Auto-generate AI videos or repost Instagram reels to YouTube</p>
         </header>
 
-        <!-- Generate Form -->
-        <div class="card">
-            <h2>Create New Short</h2>
-            <form id="generateForm">
-                <div class="form-group">
-                    <label>Keywords</label>
-                    <input type="text" id="keywords" placeholder="e.g. python, tricks, coding"
-                           required autocomplete="off">
-                    <div class="hint">Comma-separated topic keywords</div>
+        <!-- Mode Switcher -->
+        <div class="mode-switcher">
+            <button class="mode-btn active" data-mode="generate" id="modeGenerate">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                AI Generated Video
+            </button>
+            <button class="mode-btn" data-mode="repost" id="modeRepost">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><circle cx="12" cy="12" r="5"></circle><circle cx="17.5" cy="6.5" r="1.5"></circle></svg>
+                Instagram Upload
+            </button>
+        </div>
+
+        <!-- AI Generate Panel -->
+        <div class="mode-panel active" id="panelGenerate">
+            <div class="card">
+                <h2>Create New Short</h2>
+                <form id="generateForm">
+                    <div class="form-group">
+                        <label>Keywords</label>
+                        <input type="text" id="keywords" placeholder="e.g. python, tricks, coding"
+                               required autocomplete="off">
+                        <div class="hint">Comma-separated topic keywords</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="description"
+                                  placeholder="Describe what the video should be about, the style, mood, and visuals you want..."
+                                  required></textarea>
+                        <div class="hint">A few sentences about the content, pacing, and visual style</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notification Email (optional)</label>
+                        <input type="email" id="notifyEmail" placeholder="e.g. you@example.com"
+                               autocomplete="email">
+                        <div class="hint">Receive pipeline notifications via CC on this email</div>
+                    </div>
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="enableSubtitles" checked>
+                            <span class="toggle-switch"></span>
+                            Enable Subtitles
+                        </label>
+                        <div class="hint">Burn word-by-word captions onto the video</div>
+                    </div>
+                    <button type="submit" class="btn" id="submitBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Generate &amp; Upload
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Instagram Repost Panel -->
+        <div class="mode-panel" id="panelRepost">
+            <div class="card">
+                <h2>📸 Repost Instagram Reel</h2>
+
+                <!-- Instagram Status -->
+                <div id="igStatus" class="ig-auth-banner">
+                    <div id="igNotConnected">
+                        <div class="ig-auth-status">🔒 Not connected to Instagram</div>
+                    </div>
+                    <div id="igConnected" style="display:none;">
+                        <div class="ig-auth-status" style="margin-bottom:0;">✅ Instagram connected</div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="description"
-                              placeholder="Describe what the video should be about, the style, mood, and visuals you want..."
-                              required></textarea>
-                    <div class="hint">A few sentences about the content, pacing, and visual style</div>
-                </div>
-                <div class="form-group">
-                    <label>Notification Email (optional)</label>
-                    <input type="email" id="notifyEmail" placeholder="e.g. you@example.com"
-                           autocomplete="email">
-                    <div class="hint">Receive pipeline notifications via CC on this email</div>
-                </div>
-                <div class="form-group toggle-group">
-                    <label class="toggle-label">
-                        <input type="checkbox" id="enableSubtitles" checked>
-                        <span class="toggle-switch"></span>
-                        Enable Subtitles
-                    </label>
-                    <div class="hint">Burn word-by-word captions onto the video</div>
-                </div>
-                <button type="submit" class="btn" id="submitBtn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                    Generate &amp; Upload
-                </button>
-            </form>
+
+                <form id="repostForm">
+                    <div class="form-group">
+                        <label>Instagram Reel URL</label>
+                        <input type="url" id="reelUrl"
+                               placeholder="https://www.instagram.com/reel/ABC123..."
+                               required autocomplete="off">
+                        <div class="hint">Paste the full Instagram reel link</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Custom Title (optional)</label>
+                        <input type="text" id="repostTitle"
+                               placeholder="Leave blank to auto-generate with AI"
+                               autocomplete="off">
+                        <div class="hint">Override the AI-generated YouTube title</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notification Email (optional)</label>
+                        <input type="email" id="repostNotifyEmail" placeholder="e.g. you@example.com"
+                               autocomplete="email">
+                        <div class="hint">Receive notifications via CC on this email</div>
+                    </div>
+                    <button type="submit" class="btn" id="repostBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <polyline points="16 6 12 2 8 6"></polyline>
+                            <line x1="12" y1="2" x2="12" y2="15"></line>
+                        </svg>
+                        Download &amp; Upload
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Jobs List -->
@@ -335,9 +454,20 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // ---- Mode Switcher ----
+        document.querySelectorAll(".mode-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+                document.querySelectorAll(".mode-panel").forEach(p => p.classList.remove("active"));
+                btn.classList.add("active");
+                document.getElementById("panel" + btn.dataset.mode.charAt(0).toUpperCase() + btn.dataset.mode.slice(1)).classList.add("active");
+            });
+        });
+
         const ALL_STEPS = [
             "Script", "Voiceover", "Visuals", "Subtitles", "Video", "Metadata", "Upload"
         ];
+        const REPOST_STEPS = ["Download", "Metadata", "Upload"];
 
         document.getElementById("generateForm").addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -377,6 +507,44 @@
             }
         });
 
+        document.getElementById("repostForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("repostBtn");
+            const reelUrl = document.getElementById("reelUrl").value.trim();
+            const title = document.getElementById("repostTitle").value.trim();
+            const notifyEmail = document.getElementById("repostNotifyEmail").value.trim();
+
+            if (!reelUrl) return;
+
+            btn.disabled = true;
+            btn.textContent = "Starting repost...";
+
+            try {
+                const payload = { reel_url: reelUrl };
+                if (title) payload.title = title;
+                if (notifyEmail) payload.notify_email = notifyEmail;
+                const res = await fetch("/repost", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast("Repost started! Check progress below.", "success");
+                    document.getElementById("reelUrl").value = "";
+                    document.getElementById("repostTitle").value = "";
+                } else {
+                    showToast(data.error || "Failed to start repost.", "error");
+                }
+            } catch (err) {
+                showToast("Network error. Is the server running?", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg> Download & Upload`;
+            }
+        });
+
         function showToast(msg, type) {
             const toast = document.getElementById("toast");
             toast.textContent = msg;
@@ -394,8 +562,10 @@
             container.innerHTML = jobList.map(job => {
                 const completedCount = (job.completed_steps || []).length;
                 const statusClass = job.status;
+                const isRepost = job.job_type === "repost";
+                const steps = isRepost ? REPOST_STEPS : ALL_STEPS;
 
-                let stepsHtml = ALL_STEPS.map((name, idx) => {
+                let stepsHtml = steps.map((name, idx) => {
                     if (idx < completedCount) return `<span class="step-pill done">✓ ${name}</span>`;
                     if (idx === completedCount && job.status === "running") return `<span class="step-pill active">⏳ ${name}</span>`;
                     if (idx === completedCount && job.status === "failed") return `<span class="step-pill failed">✗ ${name}</span>`;
@@ -418,7 +588,7 @@
                 return `
                     <div class="job-card ${statusClass}">
                         <div class="job-top">
-                            <span class="run-id">${job.run_id}</span>
+                            <span class="run-id">${isRepost ? "📸 " : ""}${job.run_id}</span>
                             <span class="badge ${statusClass}">${job.status.toUpperCase()}</span>
                         </div>
                         <div class="job-keywords">🏷️ ${(job.keywords || []).join(", ")}</div>
@@ -441,6 +611,20 @@
 
         setInterval(pollStatus, 3000);
         pollStatus();
+
+        // ---- Instagram Auth ----
+        async function checkIgStatus() {
+            try {
+                const res = await fetch("/instagram/status");
+                const data = await res.json();
+                document.getElementById("igNotConnected").style.display = data.logged_in ? "none" : "block";
+                document.getElementById("igConnected").style.display = data.logged_in ? "block" : "none";
+                if (data.logged_in) {
+                    document.getElementById("igStatus").className = "ig-auth-banner connected";
+                }
+            } catch (e) { /* ignore */ }
+        }
+        checkIgStatus();
     </script>
 </body>
 </html>

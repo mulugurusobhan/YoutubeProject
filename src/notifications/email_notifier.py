@@ -187,3 +187,82 @@ class EmailNotifier:
         </div>
         """
         self._send(subject, html)
+
+    def send_repost_start(self, reel_url: str, run_id: str) -> None:
+        subject = "📸 Instagram Repost Started"
+        html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1a73e8;">📸 Instagram Repost Started</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Run ID</td>
+                    <td style="padding: 8px;">{run_id}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Reel URL</td>
+                    <td style="padding: 8px;"><a href="{reel_url}">{reel_url}</a></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Started At</td>
+                    <td style="padding: 8px;">{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</td>
+                </tr>
+            </table>
+            <h3 style="color: #333;">Steps:</h3>
+            <ol style="color: #555; line-height: 1.8;">
+                <li>Download Reel</li>
+                <li>Generate Metadata</li>
+                <li>Upload to YouTube</li>
+            </ol>
+            <p style="color: #888; font-size: 12px;">You will receive another email when the repost completes or fails.</p>
+        </div>
+        """
+        self._send(subject, html)
+
+    def send_repost_success(self, run_id: str, reel_url: str, title: str,
+                            video_id: str | None, duration: float,
+                            elapsed_seconds: float) -> None:
+        subject = "✅ Instagram Repost Completed"
+        video_link = f"https://youtube.com/shorts/{video_id}" if video_id else "Upload skipped"
+        html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #0d9488;">✅ Instagram Repost Completed</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Run ID</td>
+                    <td style="padding: 8px;">{run_id}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Source</td>
+                    <td style="padding: 8px;"><a href="{reel_url}">{reel_url}</a></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Title</td>
+                    <td style="padding: 8px;">{title}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Duration</td>
+                    <td style="padding: 8px;">{duration:.1f}s</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: bold; color: #555;">Total Time</td>
+                    <td style="padding: 8px;">{elapsed_seconds:.0f} seconds</td>
+                </tr>
+            </table>
+            <h3 style="color: #333;">Steps:</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                <tr style="background: #f8f9fa; border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px;">✅ 1. Download Reel</td>
+                    <td style="padding: 8px;">{duration:.1f}s video</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px;">✅ 2. Metadata</td>
+                    <td style="padding: 8px;">{title}</td>
+                </tr>
+                <tr style="background: #f8f9fa; border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px;">✅ 3. Upload</td>
+                    <td style="padding: 8px;"><a href="{video_link}">{video_link}</a></td>
+                </tr>
+            </table>
+        </div>
+        """
+        self._send(subject, html)
