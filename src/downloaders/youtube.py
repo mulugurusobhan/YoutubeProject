@@ -158,7 +158,6 @@ def _oauth_download(url: str, output_dir: Path) -> dict:
             "key": "FFmpegVideoConvertor",
             "preferedformat": "mp4",
         }],
-        "js_runtimes": "node",
     }
 
     if _warp_available():
@@ -253,7 +252,6 @@ def download_youtube(url: str) -> dict:
             "key": "FFmpegVideoConvertor",
             "preferedformat": "mp4",
         }],
-        "js_runtimes": "node",
     }
 
     if _warp_available():
