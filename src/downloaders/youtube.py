@@ -47,11 +47,15 @@ def download_youtube(url: str) -> dict:
 
     ydl_opts = {
         "outtmpl": output_template,
-        "format": "best[ext=mp4]/best",
+        "format": "best",
         "merge_output_format": "mp4",
         "writethumbnail": True,
         "quiet": False,
         "no_warnings": False,
+        "postprocessors": [{
+            "key": "FFmpegVideoConvertor",
+            "preferedformat": "mp4",
+        }],
     }
 
     # Use cookies if available to avoid bot detection
