@@ -278,6 +278,13 @@ def _run_repost(reel_url: str, custom_title: str | None, notify_email: str | Non
         "job_type": "repost",
     }
 
+    # Register immediately with a temp ID so it shows in the UI
+    import uuid as _uuid
+    temp_id = "ig_pending_" + _uuid.uuid4().hex[:8]
+    job["run_id"] = temp_id
+    with jobs_lock:
+        jobs[temp_id] = job
+
     completed_steps = []
     start_time = time.time()
 
@@ -286,8 +293,10 @@ def _run_repost(reel_url: str, custom_title: str | None, notify_email: str | Non
         _update_job(job, "1. Downloading reel...")
         reel = download_reel(reel_url)
         run_id = reel["run_id"]
-        job["run_id"] = run_id
+        # Replace temp ID with real run_id
         with jobs_lock:
+            del jobs[temp_id]
+            job["run_id"] = run_id
             jobs[run_id] = job
         completed_steps.append(step_names[0])
         _update_job(job, "1. Reel downloaded", completed_steps[:])
@@ -432,6 +441,13 @@ def _run_yt_repost(yt_url: str, custom_title: str | None, notify_email: str | No
         "job_type": "yt_repost",
     }
 
+    # Register immediately with a temp ID so it shows in the UI
+    import uuid as _uuid
+    temp_id = "yt_pending_" + _uuid.uuid4().hex[:8]
+    job["run_id"] = temp_id
+    with jobs_lock:
+        jobs[temp_id] = job
+
     completed_steps = []
     start_time = time.time()
 
@@ -440,15 +456,17 @@ def _run_yt_repost(yt_url: str, custom_title: str | None, notify_email: str | No
         _update_job(job, "1. Downloading video...")
         result = download_youtube(yt_url)
         run_id = result["run_id"]
-        job["run_id"] = run_id
+        # Replace temp ID with real run_id
         with jobs_lock:
+            del jobs[temp_id]
+            job["run_id"] = run_id
             jobs[run_id] = job
         completed_steps.append(step_names[0])
         _update_job(job, "1. Video downloaded", completed_steps[:])
 
         # Send start email
         try:
-            notifier.send_repost_start(yt_url, run_id)
+            notifier.send_yt_repost_start(yt_url, run_id)
         except Exception as e:
             print(f"[Email] Failed to send yt-repost start notification: {e}")
 
@@ -496,13 +514,14 @@ def _run_yt_repost(yt_url: str, custom_title: str | None, notify_email: str | No
 
         # Send success email
         try:
-            notifier.send_repost_success(
+            notifier.send_yt_repost_success(
                 run_id=run_id,
-                reel_url=yt_url,
+                source_url=yt_url,
                 title=metadata.title,
                 video_id=video_id,
                 duration=result.get("duration", 0),
                 elapsed_seconds=elapsed,
+                is_short=is_short,
             )
         except Exception as e:
             print(f"[Email] Failed to send yt-repost success notification: {e}")
