@@ -36,6 +36,7 @@
         /* Mode Switcher */
         .mode-switcher {
             display: flex;
+            flex-wrap: wrap;
             background: #1a1a1a;
             border: 1px solid #2a2a2a;
             border-radius: 12px;
@@ -43,19 +44,21 @@
             overflow: hidden;
         }
         .mode-btn {
-            flex: 1;
-            padding: 16px 24px;
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 14px 12px;
             background: transparent;
             border: none;
             color: #888;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
+            white-space: nowrap;
         }
         .mode-btn:hover { color: #ccc; background: #222; }
         .mode-btn.active {
@@ -330,6 +333,20 @@
             padding: 8px 18px;
             font-size: 0.85rem;
         }
+
+        @media (max-width: 600px) {
+            .mode-switcher {
+                flex-direction: column;
+            }
+            .mode-btn {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+                border-bottom: 1px solid #2a2a2a;
+            }
+            .mode-btn:last-child {
+                border-bottom: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -449,6 +466,17 @@
         <div class="mode-panel" id="panelYtRepost">
             <div class="card">
                 <h2>▶ Repost YouTube Video</h2>
+
+                <!-- YouTube Cookie Status -->
+                <div id="ytCookieStatus" class="ig-auth-banner">
+                    <div id="ytNoCookies">
+                        <div class="ig-auth-status">⚠️ No YouTube cookies found</div>
+                        <div class="hint" style="margin-top:8px;">Export cookies from your browser to <code>config/youtube_cookies.txt</code> to avoid bot detection blocks.</div>
+                    </div>
+                    <div id="ytHasCookies" style="display:none;">
+                        <div class="ig-auth-status" style="margin-bottom:0;">✅ YouTube cookies loaded</div>
+                    </div>
+                </div>
 
                 <form id="ytRepostForm">
                     <div class="form-group">
@@ -707,6 +735,20 @@
             } catch (e) { /* ignore */ }
         }
         checkIgStatus();
+
+        // ---- YouTube Cookie Status ----
+        async function checkYtCookieStatus() {
+            try {
+                const res = await fetch("/youtube/status");
+                const data = await res.json();
+                document.getElementById("ytNoCookies").style.display = data.has_cookies ? "none" : "block";
+                document.getElementById("ytHasCookies").style.display = data.has_cookies ? "block" : "none";
+                if (data.has_cookies) {
+                    document.getElementById("ytCookieStatus").className = "ig-auth-banner connected";
+                }
+            } catch (e) { /* ignore */ }
+        }
+        checkYtCookieStatus();
     </script>
 </body>
 </html>

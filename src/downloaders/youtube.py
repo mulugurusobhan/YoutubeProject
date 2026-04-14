@@ -9,6 +9,13 @@ import yt_dlp
 
 from ..config import PROJECT_ROOT
 
+COOKIES_PATH = PROJECT_ROOT / "config" / "youtube_cookies.txt"
+
+
+def has_cookies() -> bool:
+    """Check whether a YouTube cookies file exists."""
+    return COOKIES_PATH.exists() and COOKIES_PATH.stat().st_size > 0
+
 
 def _sanitize_url(url: str) -> str:
     """Validate and clean a YouTube video URL."""
@@ -46,6 +53,11 @@ def download_youtube(url: str) -> dict:
         "quiet": False,
         "no_warnings": False,
     }
+
+    # Use cookies if available to avoid bot detection
+    if COOKIES_PATH.exists():
+        ydl_opts["cookiefile"] = str(COOKIES_PATH)
+        print("[YouTube DL] Using cookies for authentication")
 
     print(f"[YouTube DL] Downloading: {url}")
 

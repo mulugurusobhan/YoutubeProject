@@ -9,7 +9,7 @@ from src.config import load_config
 from src.pipeline import Pipeline
 from src.notifications.email_notifier import EmailNotifier
 from src.downloaders.instagram import download_reel, is_logged_in as ig_is_logged_in
-from src.downloaders.youtube import download_youtube
+from src.downloaders.youtube import download_youtube, has_cookies as yt_has_cookies
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -58,6 +58,11 @@ def status():
 @app.route("/instagram/status")
 def instagram_status():
     return jsonify({"logged_in": ig_is_logged_in()})
+
+
+@app.route("/youtube/status")
+def youtube_status():
+    return jsonify({"has_cookies": yt_has_cookies()})
 
 
 def _run_pipeline(brief: dict):
