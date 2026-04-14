@@ -21,6 +21,7 @@ OAUTH_SCOPES = [
     "https://www.googleapis.com/auth/youtube",
     "https://www.googleapis.com/auth/youtube.upload",
 ]
+OAUTH_REDIRECT_URI = "http://localhost:5000/auth/google/callback"
 TOKEN_PATH = PROJECT_ROOT / "config" / "youtube_token.json"
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -577,7 +578,7 @@ def auth_google():
     flow = Flow.from_client_secrets_file(
         str(PROJECT_ROOT / "config" / "client_secret.json"),
         scopes=OAUTH_SCOPES,
-        redirect_uri=request.url_root.rstrip("/") + "/auth/google/callback",
+        redirect_uri=OAUTH_REDIRECT_URI,
     )
     auth_url, state = flow.authorization_url(
         access_type="offline",
@@ -595,7 +596,7 @@ def auth_google_callback():
     flow = Flow.from_client_secrets_file(
         str(PROJECT_ROOT / "config" / "client_secret.json"),
         scopes=OAUTH_SCOPES,
-        redirect_uri=request.url_root.rstrip("/") + "/auth/google/callback",
+        redirect_uri=OAUTH_REDIRECT_URI,
         state=state,
     )
     flow.fetch_token(authorization_response=request.url)
