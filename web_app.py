@@ -1,17 +1,30 @@
 """Flask web app for YouTube Shorts generation pipeline."""
 
+import os
+import secrets
 import time
 import traceback
 import threading
-from flask import Flask, render_template, request, jsonify
 
-from src.config import load_config
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # Allow HTTP for local OAuth
+
+from flask import Flask, render_template, request, jsonify, redirect, session
+from google_auth_oauthlib.flow import Flow
+
+from src.config import load_config, PROJECT_ROOT
 from src.pipeline import Pipeline
 from src.notifications.email_notifier import EmailNotifier
 from src.downloaders.instagram import download_reel, is_logged_in as ig_is_logged_in
-from src.downloaders.youtube import download_youtube, has_cookies as yt_has_cookies
+from src.downloaders.youtube import download_youtube, has_cookies as yt_has_cookies, has_oauth as yt_has_oauth
+
+OAUTH_SCOPES = [
+    "https://www.googleapis.com/auth/youtube",
+    "https://www.googleapis.com/auth/youtube.upload",
+]
+TOKEN_PATH = PROJECT_ROOT / "config" / "youtube_token.json"
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 
 # Track running jobs: {run_id: {status, ...}}
 jobs: dict[str, dict] = {}
@@ -62,7 +75,7 @@ def instagram_status():
 
 @app.route("/youtube/status")
 def youtube_status():
-    return jsonify({"has_cookies": yt_has_cookies()})
+    return jsonify({"has_cookies": yt_has_cookies(), "has_oauth": yt_has_oauth()})
 
 
 def _run_pipeline(brief: dict):
@@ -552,6 +565,53 @@ def _run_yt_repost(yt_url: str, custom_title: str | None, notify_email: str | No
             )
         except Exception as email_err:
             print(f"[Email] Failed to send failure notification: {email_err}")
+
+
+# ------------------------------------------------------------------
+# Google OAuth for YouTube Download
+# ------------------------------------------------------------------
+
+@app.route("/auth/google")
+def auth_google():
+    """Start Google OAuth flow for YouTube access."""
+    flow = Flow.from_client_secrets_file(
+        str(PROJECT_ROOT / "config" / "client_secret.json"),
+        scopes=OAUTH_SCOPES,
+        redirect_uri=request.url_root.rstrip("/") + "/auth/google/callback",
+    )
+    auth_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",
+    )
+    session["google_auth_state"] = state
+    return redirect(auth_url)
+
+
+@app.route("/auth/google/callback")
+def auth_google_callback():
+    """Handle Google OAuth callback and save credentials."""
+    state = session.get("google_auth_state")
+    flow = Flow.from_client_secrets_file(
+        str(PROJECT_ROOT / "config" / "client_secret.json"),
+        scopes=OAUTH_SCOPES,
+        redirect_uri=request.url_root.rstrip("/") + "/auth/google/callback",
+        state=state,
+    )
+    flow.fetch_token(authorization_response=request.url)
+    creds = flow.credentials
+
+    TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(TOKEN_PATH, "w") as f:
+        f.write(creds.to_json())
+
+    return redirect("/")
+
+
+@app.route("/auth/status")
+def auth_status():
+    """Check Google OAuth status."""
+    return jsonify({"has_oauth": yt_has_oauth()})
 
 
 if __name__ == "__main__":
