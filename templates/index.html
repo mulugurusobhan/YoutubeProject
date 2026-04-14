@@ -349,6 +349,10 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><circle cx="12" cy="12" r="5"></circle><circle cx="17.5" cy="6.5" r="1.5"></circle></svg>
                 Instagram Upload
             </button>
+            <button class="mode-btn" data-mode="ytRepost" id="modeYtRepost">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.43z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                YouTube Repost
+            </button>
         </div>
 
         <!-- AI Generate Panel -->
@@ -441,6 +445,44 @@
             </div>
         </div>
 
+        <!-- YouTube Repost Panel -->
+        <div class="mode-panel" id="panelYtRepost">
+            <div class="card">
+                <h2>▶ Repost YouTube Video</h2>
+
+                <form id="ytRepostForm">
+                    <div class="form-group">
+                        <label>YouTube URL</label>
+                        <input type="url" id="ytUrl"
+                               placeholder="https://www.youtube.com/watch?v=... or /shorts/..."
+                               required autocomplete="off">
+                        <div class="hint">Paste a full YouTube video or Shorts link</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Custom Title (optional)</label>
+                        <input type="text" id="ytRepostTitle"
+                               placeholder="Leave blank to auto-generate with AI"
+                               autocomplete="off">
+                        <div class="hint">Override the AI-generated YouTube title</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notification Email (optional)</label>
+                        <input type="email" id="ytRepostNotifyEmail" placeholder="e.g. you@example.com"
+                               autocomplete="email">
+                        <div class="hint">Receive notifications via CC on this email</div>
+                    </div>
+                    <button type="submit" class="btn" id="ytRepostBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <polyline points="16 6 12 2 8 6"></polyline>
+                            <line x1="12" y1="2" x2="12" y2="15"></line>
+                        </svg>
+                        Download &amp; Upload
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <!-- Jobs List -->
         <div class="jobs-header">
             <h2>Pipeline Runs</h2>
@@ -468,6 +510,7 @@
             "Script", "Voiceover", "Visuals", "Subtitles", "Video", "Metadata", "Upload"
         ];
         const REPOST_STEPS = ["Download", "Metadata", "Upload"];
+        const YT_REPOST_STEPS = ["Download", "Metadata", "Upload"];
 
         document.getElementById("generateForm").addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -545,6 +588,44 @@
             }
         });
 
+        document.getElementById("ytRepostForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("ytRepostBtn");
+            const ytUrl = document.getElementById("ytUrl").value.trim();
+            const title = document.getElementById("ytRepostTitle").value.trim();
+            const notifyEmail = document.getElementById("ytRepostNotifyEmail").value.trim();
+
+            if (!ytUrl) return;
+
+            btn.disabled = true;
+            btn.textContent = "Starting download...";
+
+            try {
+                const payload = { youtube_url: ytUrl };
+                if (title) payload.title = title;
+                if (notifyEmail) payload.notify_email = notifyEmail;
+                const res = await fetch("/yt-repost", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast("YouTube repost started! Check progress below.", "success");
+                    document.getElementById("ytUrl").value = "";
+                    document.getElementById("ytRepostTitle").value = "";
+                } else {
+                    showToast(data.error || "Failed to start YouTube repost.", "error");
+                }
+            } catch (err) {
+                showToast("Network error. Is the server running?", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg> Download & Upload`;
+            }
+        });
+
         function showToast(msg, type) {
             const toast = document.getElementById("toast");
             toast.textContent = msg;
@@ -563,7 +644,8 @@
                 const completedCount = (job.completed_steps || []).length;
                 const statusClass = job.status;
                 const isRepost = job.job_type === "repost";
-                const steps = isRepost ? REPOST_STEPS : ALL_STEPS;
+                const isYtRepost = job.job_type === "yt_repost";
+                const steps = isRepost ? REPOST_STEPS : (isYtRepost ? YT_REPOST_STEPS : ALL_STEPS);
 
                 let stepsHtml = steps.map((name, idx) => {
                     if (idx < completedCount) return `<span class="step-pill done">✓ ${name}</span>`;
@@ -588,7 +670,7 @@
                 return `
                     <div class="job-card ${statusClass}">
                         <div class="job-top">
-                            <span class="run-id">${isRepost ? "📸 " : ""}${job.run_id}</span>
+                            <span class="run-id">${isRepost ? "📸 " : (isYtRepost ? "▶ " : "")}${job.run_id}</span>
                             <span class="badge ${statusClass}">${job.status.toUpperCase()}</span>
                         </div>
                         <div class="job-keywords">🏷️ ${(job.keywords || []).join(", ")}</div>
