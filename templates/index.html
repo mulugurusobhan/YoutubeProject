@@ -143,6 +143,46 @@
             color: #555;
             margin-top: 6px;
         }
+
+        /* Primary Button */
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #C9A84C, #A88B3D);
+            color: #0a0a0a;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(.4,0,.2,1);
+            width: 100%;
+            justify-content: center;
+            letter-spacing: 0.4px;
+            text-decoration: none;
+        }
+        .btn svg {
+            stroke: #0a0a0a;
+        }
+        .btn:hover {
+            background: linear-gradient(135deg, #E8D48B, #C9A84C);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(201,168,76,0.25);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            background: #151515;
+            color: #444;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn:disabled svg {
+            stroke: #444;
         }
 
         /* Toast */
