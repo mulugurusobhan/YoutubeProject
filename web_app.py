@@ -617,5 +617,44 @@ def auth_status():
     return jsonify({"has_oauth": yt_has_oauth()})
 
 
+@app.route("/auth/playwright", methods=["POST"])
+def auth_playwright():
+    """Run Google OAuth via Playwright (for headless VM environments).
+
+    Expects JSON: {"email": "...", "password": "..."}
+    Runs Playwright in a background thread to complete Google login.
+    """
+    data = request.get_json()
+    email = data.get("email", "").strip()
+    password = data.get("password", "").strip()
+
+    if not email or not password:
+        return jsonify({"error": "Email and password are required."}), 400
+
+    from src.auth.playwright_oauth import run_oauth_flow
+
+    # Run in a thread so the request doesn't block for too long
+    result_holder = {}
+
+    def _run():
+        result_holder["result"] = run_oauth_flow(
+            email, password, flask_base_url="http://localhost:5000"
+        )
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+    thread.join(timeout=120)  # wait up to 2 minutes
+
+    if "result" in result_holder:
+        result = result_holder["result"]
+        status_code = 200 if result["success"] else 400
+        return jsonify(result), status_code
+    else:
+        return jsonify({
+            "success": False,
+            "message": "OAuth flow timed out (>2 min). Check output/oauth_screenshots/ for progress.",
+        }), 408
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
