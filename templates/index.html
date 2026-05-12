@@ -94,10 +94,10 @@
             background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
         }
         .card h2 {
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             margin-bottom: 28px;
-            color: #E8D48B;
-            font-weight: 600;
+            color: #e8e8e8;
+            font-weight: 700;
             letter-spacing: -0.3px;
         }
         .form-group {
@@ -105,22 +105,22 @@
         }
         .form-group label {
             display: block;
-            font-size: 0.75rem;
-            color: #666;
+            font-size: 0.8rem;
+            color: #888;
             margin-bottom: 8px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
+            letter-spacing: 0.5px;
         }
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 14px 16px;
-            background: #050505;
-            border: 1px solid #1a1a1a;
-            border-radius: 10px;
-            color: #d4d4d4;
-            font-size: 0.92rem;
+            padding: 14px 18px;
+            background: #080808;
+            border: 1px solid #222;
+            border-radius: 12px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
             font-family: inherit;
             transition: all 0.3s cubic-bezier(.4,0,.2,1);
         }
@@ -132,15 +132,15 @@
         }
         .form-group input::placeholder,
         .form-group textarea::placeholder {
-            color: #333;
+            color: #444;
         }
         .form-group textarea {
             resize: vertical;
             min-height: 100px;
         }
         .form-group .hint {
-            font-size: 0.76rem;
-            color: #444;
+            font-size: 0.78rem;
+            color: #555;
             margin-top: 6px;
         }
         }
@@ -273,9 +273,9 @@
 
         .no-jobs {
             text-align: center;
-            color: #333;
+            color: #555;
             padding: 48px;
-            font-size: 0.88rem;
+            font-size: 0.9rem;
         }
 
         /* Toggle switch */
@@ -285,8 +285,8 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
-            font-size: 0.88rem;
-            color: #888;
+            font-size: 0.92rem;
+            color: #ccc;
             text-transform: none;
             letter-spacing: 0;
             font-weight: 500;
@@ -334,10 +334,10 @@
             justify-content: space-between;
         }
         .ig-auth-status {
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 12px;
-            color: #999;
+            color: #ccc;
         }
         .ig-auth-banner.connected .ig-auth-status { margin-bottom: 0; }
         .btn-sm {
@@ -379,14 +379,14 @@
             justify-content: center;
             gap: 10px;
             padding: 14px 20px;
-            border-radius: 10px;
-            font-size: 0.85rem;
+            border-radius: 12px;
+            font-size: 0.88rem;
             font-weight: 600;
             cursor: pointer;
             border: 1px solid transparent;
             transition: all 0.35s cubic-bezier(.4,0,.2,1);
             text-decoration: none;
-            color: #000;
+            color: #0a0a0a;
             letter-spacing: 0.2px;
         }
         .auth-method-btn.google-redirect {
@@ -470,12 +470,12 @@
         }
         .pw-field label {
             display: block;
-            font-size: 0.72rem;
-            color: #555;
+            font-size: 0.78rem;
+            color: #777;
             margin-bottom: 6px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
+            letter-spacing: 0.5px;
         }
         .pw-field input {
             width: 100%;
@@ -503,26 +503,29 @@
         }
         .pw-submit {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #C9A84C, #B8943F);
-            color: #000;
+            padding: 16px;
+            background: linear-gradient(135deg, #C9A84C, #A88B3D);
+            color: #0a0a0a;
             border: none;
-            border-radius: 10px;
-            font-size: 0.92rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.35s cubic-bezier(.4,0,.2,1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             margin-top: 4px;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
+        }
+        .pw-submit svg {
+            stroke: #0a0a0a;
         }
         .pw-submit:hover:not(:disabled) {
             background: linear-gradient(135deg, #E8D48B, #C9A84C);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(201,168,76,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(201,168,76,0.25);
         }
         .pw-submit:disabled {
             background: #111;
