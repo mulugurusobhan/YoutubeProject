@@ -347,6 +347,249 @@
                 border-bottom: none;
             }
         }
+
+        /* ── Playwright OAuth Card ── */
+        .auth-section {
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-methods {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        @media (max-width: 600px) {
+            .auth-methods { flex-direction: column; }
+        }
+        .auth-method-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            text-decoration: none;
+            color: #fff;
+        }
+        .auth-method-btn.google-redirect {
+            background: linear-gradient(135deg, #4285f4, #356ac3);
+        }
+        .auth-method-btn.google-redirect:hover {
+            background: linear-gradient(135deg, #5a9bf4, #4285f4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66,133,244,0.3);
+        }
+        .auth-method-btn.pw-trigger {
+            background: transparent;
+            border: 1px solid #333;
+            color: #ccc;
+        }
+        .auth-method-btn.pw-trigger:hover {
+            border-color: #555;
+            background: rgba(255,255,255,0.04);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.05);
+        }
+        .auth-method-btn svg { flex-shrink: 0; }
+
+        /* Playwright login drawer */
+        .pw-drawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.45s cubic-bezier(.4,0,.2,1), opacity 0.35s ease, margin 0.35s ease;
+            opacity: 0;
+            margin-top: 0;
+        }
+        .pw-drawer.open {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 16px;
+        }
+        .pw-card {
+            background: linear-gradient(145deg, rgba(30,30,35,0.95), rgba(20,20,25,0.98));
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 28px;
+            backdrop-filter: blur(12px);
+            position: relative;
+        }
+        .pw-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4285f4, #34a853, #fbbc05, #ea4335);
+            border-radius: 14px 14px 0 0;
+        }
+        .pw-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .pw-card-header h3 {
+            font-size: 1rem;
+            color: #e8e8e8;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pw-close {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .pw-close:hover { color: #ccc; background: rgba(255,255,255,0.06); }
+        .pw-field {
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .pw-field label {
+            display: block;
+            font-size: 0.78rem;
+            color: #777;
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .pw-field input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15,15,15,0.8);
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            color: #e8e8e8;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.25s ease;
+        }
+        .pw-field input:focus {
+            outline: none;
+            border-color: #4285f4;
+            box-shadow: 0 0 0 3px rgba(66,133,244,0.15);
+        }
+        .pw-field input::placeholder { color: #444; }
+        .pw-field .pw-input-icon {
+            position: absolute;
+            right: 14px;
+            top: 36px;
+            color: #444;
+            pointer-events: none;
+        }
+        .pw-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #34a853, #2d9249);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .pw-submit:hover:not(:disabled) {
+            background: linear-gradient(135deg, #3dba5e, #34a853);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(52,168,83,0.3);
+        }
+        .pw-submit:disabled {
+            background: #222;
+            color: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .pw-submit.loading {
+            position: relative;
+            color: transparent;
+        }
+        .pw-submit.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: pw-spin 0.7s linear infinite;
+        }
+        @keyframes pw-spin {
+            to { transform: rotate(360deg); }
+        }
+        .pw-status {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            display: none;
+            animation: pw-fadeIn 0.3s ease;
+        }
+        .pw-status.visible { display: block; }
+        .pw-status.info {
+            background: rgba(66,133,244,0.1);
+            border: 1px solid rgba(66,133,244,0.2);
+            color: #7aafff;
+        }
+        .pw-status.success {
+            background: rgba(52,168,83,0.1);
+            border: 1px solid rgba(52,168,83,0.2);
+            color: #6dd897;
+        }
+        .pw-status.error {
+            background: rgba(234,67,53,0.1);
+            border: 1px solid rgba(234,67,53,0.2);
+            color: #f87171;
+        }
+        @keyframes pw-fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pw-footer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 14px;
+            font-size: 0.75rem;
+            color: #555;
+        }
+        .pw-footer svg { flex-shrink: 0; }
+
+        /* Connected state polish */
+        .auth-connected {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .auth-connected-dot {
+            width: 10px; height: 10px;
+            background: #34a853;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(52,168,83,0.5);
+            animation: auth-glow 2s ease-in-out infinite;
+        }
+        @keyframes auth-glow {
+            0%, 100% { box-shadow: 0 0 8px rgba(52,168,83,0.5); }
+            50% { box-shadow: 0 0 14px rgba(52,168,83,0.8); }
+        }
     </style>
 </head>
 <body>
@@ -468,38 +711,71 @@
                 <h2>▶ Repost YouTube Video</h2>
 
                 <!-- YouTube Auth Status -->
-                <div id="ytAuthStatus" class="ig-auth-banner">
+                <div id="ytAuthStatus" class="ig-auth-banner auth-section">
                     <div id="ytNoAuth">
                         <div class="ig-auth-status">⚠️ Not connected to Google</div>
-                        <div class="hint" style="margin-top:8px;">Login with your Google account to enable YouTube video downloads.</div>
-                        <a href="/auth/google" class="btn" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:#4285f4;padding:10px 20px;font-size:0.9rem;border-radius:8px;color:#fff;">
-                            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                            Login with Google
-                        </a>
-                        <div style="margin-top:12px;">
-                            <button type="button" onclick="showPlaywrightLogin()" class="btn" style="background:#1a73e8;padding:8px 16px;font-size:0.85rem;border-radius:8px;color:#fff;border:none;cursor:pointer;">
-                                🤖 Login via Playwright (Headless VM)
+                        <div class="hint" style="margin-top:6px;">Choose a login method to enable YouTube video downloads & uploads.</div>
+
+                        <div class="auth-methods">
+                            <a href="/auth/google" class="auth-method-btn google-redirect">
+                                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#fff" fill-opacity=".4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#fff" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#fff" fill-opacity=".4" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#fff" fill-opacity=".6" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                                Login with Google
+                            </a>
+                            <button type="button" onclick="togglePlaywrightDrawer()" class="auth-method-btn pw-trigger" id="pwTriggerBtn">
+                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z"/></svg>
+                                Server Login (Headless)
                             </button>
                         </div>
-                        <div id="playwrightLoginForm" style="display:none;margin-top:12px;padding:16px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
-                            <div class="form-group" style="margin-bottom:8px;">
-                                <label style="font-size:0.85rem;">Google Email</label>
-                                <input type="email" id="pwEmail" placeholder="your@gmail.com" autocomplete="email" style="width:100%;">
+
+                        <!-- Playwright Login Drawer -->
+                        <div id="pwDrawer" class="pw-drawer">
+                            <div class="pw-card">
+                                <div class="pw-card-header">
+                                    <h3>
+                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#4285f4" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
+                                        Automated OAuth
+                                    </h3>
+                                    <button type="button" class="pw-close" onclick="togglePlaywrightDrawer()">&times;</button>
+                                </div>
+
+                                <div class="pw-field">
+                                    <label>Google Email</label>
+                                    <input type="email" id="pwEmail" placeholder="you@gmail.com" autocomplete="email" spellcheck="false">
+                                    <div class="pw-input-icon">
+                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                                    </div>
+                                </div>
+                                <div class="pw-field">
+                                    <label>Password</label>
+                                    <input type="password" id="pwPassword" placeholder="••••••••" autocomplete="current-password">
+                                    <div class="pw-input-icon">
+                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="pwLoginBtn" class="pw-submit" onclick="runPlaywrightLogin()">
+                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
+                                    Authenticate
+                                </button>
+
+                                <div id="pwLoginStatus" class="pw-status"></div>
+
+                                <div class="pw-footer">
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                                    Credentials are sent directly to Google — never stored on this server.
+                                </div>
                             </div>
-                            <div class="form-group" style="margin-bottom:8px;">
-                                <label style="font-size:0.85rem;">Google Password</label>
-                                <input type="password" id="pwPassword" placeholder="Password" autocomplete="current-password" style="width:100%;">
-                            </div>
-                            <button type="button" onclick="runPlaywrightLogin()" id="pwLoginBtn" class="btn" style="background:#34a853;padding:8px 16px;font-size:0.85rem;border-radius:8px;color:#fff;border:none;cursor:pointer;width:100%;">
-                                Start Automated Login
-                            </button>
-                            <div id="pwLoginStatus" style="margin-top:8px;font-size:0.85rem;display:none;"></div>
-                            <div class="hint" style="margin-top:8px;font-size:0.75rem;">Uses Playwright on the server to automate Google OAuth. Credentials are not stored.</div>
                         </div>
                     </div>
+
                     <div id="ytHasAuth" style="display:none;">
-                        <div class="ig-auth-status" style="margin-bottom:0;">✅ Google account connected</div>
-                        <div class="hint" style="margin-top:4px;"><a href="/auth/google" style="color:#4285f4;">Re-authenticate</a> if downloads fail.</div>
+                        <div class="auth-connected">
+                            <div class="auth-connected-dot"></div>
+                            <div>
+                                <div class="ig-auth-status" style="margin-bottom:2px;">Google account connected</div>
+                                <div class="hint"><a href="/auth/google" style="color:#4285f4;text-decoration:none;">Re-authenticate</a> if downloads fail &middot; <a href="#" onclick="togglePlaywrightDrawer();return false;" style="color:#888;text-decoration:none;">Use server login</a></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -776,47 +1052,63 @@
         }
         checkYtAuthStatus();
 
-        function showPlaywrightLogin() {
-            const form = document.getElementById("playwrightLoginForm");
-            form.style.display = form.style.display === "none" ? "block" : "none";
+        function togglePlaywrightDrawer() {
+            const drawer = document.getElementById('pwDrawer');
+            const trigger = document.getElementById('pwTriggerBtn');
+            const isOpen = drawer.classList.contains('open');
+            drawer.classList.toggle('open');
+            if (trigger) {
+                trigger.style.borderColor = isOpen ? '#333' : '#555';
+                trigger.style.background = isOpen ? 'transparent' : 'rgba(255,255,255,0.04)';
+            }
+            if (!isOpen) {
+                setTimeout(() => document.getElementById('pwEmail')?.focus(), 400);
+            }
         }
 
         async function runPlaywrightLogin() {
-            const email = document.getElementById("pwEmail").value.trim();
-            const password = document.getElementById("pwPassword").value.trim();
+            const email = document.getElementById('pwEmail').value.trim();
+            const password = document.getElementById('pwPassword').value.trim();
             if (!email || !password) {
-                alert("Please enter both email and password.");
+                showPwStatus('Please enter both email and password.', 'error');
                 return;
             }
 
-            const btn = document.getElementById("pwLoginBtn");
-            const status = document.getElementById("pwLoginStatus");
+            const btn = document.getElementById('pwLoginBtn');
             btn.disabled = true;
-            btn.textContent = "⏳ Running OAuth flow...";
-            status.style.display = "block";
-            status.innerHTML = '<span style="color:#ffa500;">Playwright is automating Google login... This may take up to 2 minutes.</span>';
+            btn.classList.add('loading');
+            showPwStatus('Playwright is automating Google login… this may take up to 2 minutes.', 'info');
 
             try {
-                const res = await fetch("/auth/playwright", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
+                const res = await fetch('/auth/playwright', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({email, password}),
                 });
                 const data = await res.json();
 
                 if (data.success) {
-                    status.innerHTML = '<span style="color:#34a853;">✅ ' + data.message + '</span>';
-                    document.getElementById("pwPassword").value = "";
-                    setTimeout(() => checkYtAuthStatus(), 1000);
+                    showPwStatus(data.message, 'success');
+                    document.getElementById('pwPassword').value = '';
+                    setTimeout(() => {
+                        checkYtAuthStatus();
+                        togglePlaywrightDrawer();
+                    }, 1500);
                 } else {
-                    status.innerHTML = '<span style="color:#ea4335;">❌ ' + data.message + '</span>';
+                    showPwStatus(data.message, 'error');
                 }
             } catch (e) {
-                status.innerHTML = '<span style="color:#ea4335;">❌ Request failed: ' + e.message + '</span>';
+                showPwStatus('Request failed: ' + e.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = "Start Automated Login";
+                btn.classList.remove('loading');
             }
+        }
+
+        function showPwStatus(msg, type) {
+            const el = document.getElementById('pwLoginStatus');
+            el.className = 'pw-status visible ' + type;
+            el.textContent = msg;
         }
     </script>
 </body>
